@@ -33,10 +33,11 @@ class LocalStorage {
   }
 
   set<T>(key: string, value: T): void {
+    console.log(`Attempting to set ${key} in storage:`, value);
     const data = this.getData();
     data[key] = value;
     this.setData(data);
-    console.log(`Setting ${key} in storage:`, value);
+    console.log(`Successfully set ${key} in storage`);
   }
 
   remove(key: string): void {
@@ -49,6 +50,11 @@ class LocalStorage {
   clear(): void {
     localStorage.removeItem(this.storageKey);
     console.log('Storage cleared');
+  }
+
+  // Método para debug
+  getAll(): any {
+    return this.getData();
   }
 }
 

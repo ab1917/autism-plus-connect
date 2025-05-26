@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { Dashboard } from '@/components/Dashboard';
 import { DiaryModule } from '@/components/DiaryModule';
@@ -17,10 +17,13 @@ const Index = () => {
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Carregar dados do localStorage na inicialização
   useEffect(() => {
-    console.log('Loading data from storage...');
+    console.log('=== INICIANDO CARREGAMENTO DE DADOS ===');
+    console.log('Current storage state:', storage.getAll());
+    
     const storedProfiles = storage.get<ChildProfile[]>('profiles') || [];
     const storedEntries = storage.get<DiaryEntry[]>('diaryEntries') || [];
     const storedMessages = storage.get<ChatMessage[]>('chatMessages') || [];
@@ -28,11 +31,19 @@ const Index = () => {
     
     console.log('Loaded profiles:', storedProfiles);
     console.log('Loaded entries:', storedEntries);
+    console.log('Loaded messages:', storedMessages);
+    console.log('Loaded theme:', storedTheme);
     
+    // Aplicar os dados carregados
     setProfiles(storedProfiles);
     setDiaryEntries(storedEntries);
     setChatMessages(storedMessages);
     setIsDarkMode(storedTheme);
+    
+    // Marcar como carregado para evitar sobrescrita
+    setIsLoaded(true);
+    
+    console.log('=== CARREGAMENTO CONCLUÍDO ===');
 
     // Se houver apenas um perfil, selecioná-lo automaticamente
     if (storedProfiles.length === 1) {
@@ -43,32 +54,44 @@ const Index = () => {
     }
   }, []);
 
-  // Salvar dados no localStorage quando alterados
+  // Salvar perfis apenas quando carregado e quando há mudanças reais
   useEffect(() => {
-    console.log('Saving profiles to storage:', profiles);
+    if (!isLoaded) {
+      console.log('Skipping save - not loaded yet');
+      return;
+    }
+    
+    console.log('=== SALVANDO PERFIS ===');
+    console.log('Profiles to save:', profiles);
     storage.set('profiles', profiles);
-  }, [profiles]);
+    console.log('Profiles saved successfully');
+  }, [profiles, isLoaded]);
 
+  // Salvar outros dados
   useEffect(() => {
-    console.log('Saving diary entries to storage:', diaryEntries);
+    if (!isLoaded) return;
+    console.log('Saving diary entries:', diaryEntries);
     storage.set('diaryEntries', diaryEntries);
-  }, [diaryEntries]);
+  }, [diaryEntries, isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     storage.set('chatMessages', chatMessages);
-  }, [chatMessages]);
+  }, [chatMessages, isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     storage.set('isDarkMode', isDarkMode);
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, isLoaded]);
 
-  const handleCreateProfile = (profileData: Omit<ChildProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
-    console.log('Creating new profile with data:', profileData);
+  const handleCreateProfile = useCallback((profileData: Omit<ChildProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log('=== CRIANDO NOVO PERFIL ===');
+    console.log('Profile data received:', profileData);
     
     const newProfile: ChildProfile = {
       ...profileData,
@@ -79,35 +102,36 @@ const Index = () => {
     
     console.log('New profile created:', newProfile);
     
-    const updatedProfiles = [...profiles, newProfile];
-    console.log('Updated profiles array:', updatedProfiles);
+    setProfiles(prevProfiles => {
+      const updatedProfiles = [...prevProfiles, newProfile];
+      console.log('Updated profiles array:', updatedProfiles);
+      console.log('Previous profiles:', prevProfiles);
+      return updatedProfiles;
+    });
     
-    setProfiles(updatedProfiles);
     setSelectedProfile(newProfile);
     setCurrentPage('dashboard');
     
-    // Force storage save immediately
-    storage.set('profiles', updatedProfiles);
-    console.log('Profile saved to storage');
-  };
+    console.log('=== PERFIL CRIADO COM SUCESSO ===');
+  }, []);
 
-  const handleSelectProfile = (profile: ChildProfile) => {
+  const handleSelectProfile = useCallback((profile: ChildProfile) => {
     console.log('Selecting profile:', profile);
     setSelectedProfile(profile);
     setCurrentPage('dashboard');
-  };
+  }, []);
 
-  const handleAddDiaryEntry = (entryData: Omit<DiaryEntry, 'id' | 'createdAt'>) => {
+  const handleAddDiaryEntry = useCallback((entryData: Omit<DiaryEntry, 'id' | 'createdAt'>) => {
     const newEntry: DiaryEntry = {
       ...entryData,
       id: Date.now().toString(),
       createdAt: new Date().toISOString()
     };
     
-    setDiaryEntries([newEntry, ...diaryEntries]);
-  };
+    setDiaryEntries(prev => [newEntry, ...prev]);
+  }, []);
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = useCallback((content: string) => {
     const isUser = chatMessages.length === 0 || chatMessages[chatMessages.length - 1].type === 'assistant';
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -116,21 +140,21 @@ const Index = () => {
       timestamp: new Date().toISOString()
     };
     
-    setChatMessages([...chatMessages, newMessage]);
-  };
+    setChatMessages(prev => [...prev, newMessage]);
+  }, [chatMessages]);
 
-  const handleNavigate = (page: string) => {
+  const handleNavigate = useCallback((page: string) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (currentPage === 'dashboard' && profiles.length > 1) {
       setCurrentPage('profiles');
       setSelectedProfile(null);
     } else if (currentPage !== 'profiles' && currentPage !== 'dashboard') {
       setCurrentPage('dashboard');
     }
-  };
+  }, [currentPage, profiles.length]);
 
   const getPageTitle = () => {
     switch (currentPage) {
@@ -145,6 +169,18 @@ const Index = () => {
   const filteredDiaryEntries = selectedProfile 
     ? diaryEntries.filter(entry => entry.childId === selectedProfile.id)
     : [];
+
+  // Mostrar loading enquanto carrega
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando Autism+...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${
@@ -202,8 +238,18 @@ const Index = () => {
         {/* Debug Info */}
         {process.env.NODE_ENV === 'development' && (
           <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-            <p className="text-sm">Debug: {profiles.length} perfis carregados</p>
+            <p className="text-sm font-bold">Debug Info:</p>
+            <p className="text-sm">Perfis carregados: {profiles.length}</p>
             <p className="text-sm">Perfil selecionado: {selectedProfile?.name || 'Nenhum'}</p>
+            <p className="text-sm">Storage total: {JSON.stringify(storage.getAll()).length} chars</p>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => console.log('Current state:', { profiles, selectedProfile, currentPage })}
+              className="mt-2"
+            >
+              Log Current State
+            </Button>
           </div>
         )}
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,6 +72,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   const validateForm = () => {
+    console.log('Validating form with data:', formData);
     const newErrors: {[key: string]: string} = {};
     
     if (!formData.name.trim()) {
@@ -87,6 +87,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
       newErrors.dateOfBirth = 'Data de nascimento é obrigatória';
     }
 
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -94,11 +95,11 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submission started');
-    console.log('Form data:', formData);
+    console.log('=== FORM SUBMISSION STARTED ===');
+    console.log('Raw form data:', formData);
     
     if (!validateForm()) {
-      console.log('Validation failed:', errors);
+      console.log('❌ Validation failed:', errors);
       return;
     }
     
@@ -111,8 +112,14 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
       preferences: formData.preferences
     };
 
-    console.log('Submitting profile data:', profileData);
-    onSubmit(profileData);
+    console.log('✅ Validation passed. Submitting profile data:', profileData);
+    
+    try {
+      onSubmit(profileData);
+      console.log('✅ Profile submitted successfully');
+    } catch (error) {
+      console.error('❌ Error submitting profile:', error);
+    }
   };
 
   const addItem = (category: 'diagnoses' | 'sensitivities' | 'preferences', item: string) => {
@@ -122,6 +129,8 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
         ...prev,
         [category]: [...prev[category], item]
       }));
+    } else {
+      console.log(`Item ${item} already exists in ${category} or is empty`);
     }
   };
 
@@ -139,6 +148,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
     const value = customInputs[inputKey].trim();
     
     if (value) {
+      console.log(`Adding custom ${inputKey}: ${value}`);
       addItem(category, value);
       setCustomInputs(prev => ({ ...prev, [inputKey]: '' }));
     }
@@ -152,7 +162,11 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
         </label>
         <Input
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) => {
+            console.log('Name changed to:', e.target.value);
+            setFormData({ ...formData, name: e.target.value });
+            if (errors.name) setErrors({ ...errors, name: '' });
+          }}
           placeholder="Digite o nome"
           className={errors.name ? 'border-red-500' : ''}
         />
@@ -167,7 +181,11 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
           <Input
             type="number"
             value={formData.age}
-            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            onChange={(e) => {
+              console.log('Age changed to:', e.target.value);
+              setFormData({ ...formData, age: e.target.value });
+              if (errors.age) setErrors({ ...errors, age: '' });
+            }}
             placeholder="Idade em anos"
             min="1"
             max="18"
@@ -183,7 +201,11 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
           <Input
             type="date"
             value={formData.dateOfBirth}
-            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+            onChange={(e) => {
+              console.log('Date of birth changed to:', e.target.value);
+              setFormData({ ...formData, dateOfBirth: e.target.value });
+              if (errors.dateOfBirth) setErrors({ ...errors, dateOfBirth: '' });
+            }}
             className={errors.dateOfBirth ? 'border-red-500' : ''}
           />
           {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
