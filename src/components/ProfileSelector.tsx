@@ -2,11 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, User, Calendar, Heart, Brain } from 'lucide-react';
 import { ChildProfile } from '@/lib/types';
+import { ProfileForm } from './ProfileForm';
 
 interface ProfileSelectorProps {
   profiles: ChildProfile[];
@@ -22,37 +21,10 @@ export function ProfileSelector({
   onCreateProfile 
 }: ProfileSelectorProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    dateOfBirth: '',
-    diagnoses: '',
-    sensitivities: '',
-    preferences: ''
-  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const profileData = {
-      name: formData.name,
-      age: parseInt(formData.age),
-      dateOfBirth: formData.dateOfBirth,
-      diagnoses: formData.diagnoses.split(',').map(d => d.trim()).filter(d => d),
-      sensitivities: formData.sensitivities.split(',').map(s => s.trim()).filter(s => s),
-      preferences: formData.preferences.split(',').map(p => p.trim()).filter(p => p)
-    };
-
+  const handleCreateProfile = (profileData: Omit<ChildProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
     onCreateProfile(profileData);
     setIsCreateDialogOpen(false);
-    setFormData({
-      name: '',
-      age: '',
-      dateOfBirth: '',
-      diagnoses: '',
-      sensitivities: '',
-      preferences: ''
-    });
   };
 
   return (
@@ -141,99 +113,15 @@ export function ProfileSelector({
             </Card>
           </DialogTrigger>
 
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Novo Perfil</DialogTitle>
             </DialogHeader>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Nome da criança *
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Digite o nome"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Idade *
-                </label>
-                <Input
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  placeholder="Idade em anos"
-                  min="1"
-                  max="18"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Data de nascimento *
-                </label>
-                <Input
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Diagnósticos
-                </label>
-                <Input
-                  value={formData.diagnoses}
-                  onChange={(e) => setFormData({ ...formData, diagnoses: e.target.value })}
-                  placeholder="Separados por vírgula"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Sensibilidades
-                </label>
-                <Textarea
-                  value={formData.sensitivities}
-                  onChange={(e) => setFormData({ ...formData, sensitivities: e.target.value })}
-                  placeholder="Separadas por vírgula"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Preferências
-                </label>
-                <Textarea
-                  value={formData.preferences}
-                  onChange={(e) => setFormData({ ...formData, preferences: e.target.value })}
-                  placeholder="Separadas por vírgula"
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  Criar Perfil
-                </Button>
-              </div>
-            </form>
+            <ProfileForm 
+              onSubmit={handleCreateProfile}
+              onCancel={() => setIsCreateDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
