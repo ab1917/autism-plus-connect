@@ -20,10 +20,14 @@ const Index = () => {
 
   // Carregar dados do localStorage na inicialização
   useEffect(() => {
+    console.log('Loading data from storage...');
     const storedProfiles = storage.get<ChildProfile[]>('profiles') || [];
     const storedEntries = storage.get<DiaryEntry[]>('diaryEntries') || [];
     const storedMessages = storage.get<ChatMessage[]>('chatMessages') || [];
     const storedTheme = storage.get<boolean>('isDarkMode') || false;
+    
+    console.log('Loaded profiles:', storedProfiles);
+    console.log('Loaded entries:', storedEntries);
     
     setProfiles(storedProfiles);
     setDiaryEntries(storedEntries);
@@ -41,10 +45,12 @@ const Index = () => {
 
   // Salvar dados no localStorage quando alterados
   useEffect(() => {
+    console.log('Saving profiles to storage:', profiles);
     storage.set('profiles', profiles);
   }, [profiles]);
 
   useEffect(() => {
+    console.log('Saving diary entries to storage:', diaryEntries);
     storage.set('diaryEntries', diaryEntries);
   }, [diaryEntries]);
 
@@ -62,6 +68,8 @@ const Index = () => {
   }, [isDarkMode]);
 
   const handleCreateProfile = (profileData: Omit<ChildProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log('Creating new profile with data:', profileData);
+    
     const newProfile: ChildProfile = {
       ...profileData,
       id: Date.now().toString(),
@@ -69,13 +77,22 @@ const Index = () => {
       updatedAt: new Date().toISOString()
     };
     
+    console.log('New profile created:', newProfile);
+    
     const updatedProfiles = [...profiles, newProfile];
+    console.log('Updated profiles array:', updatedProfiles);
+    
     setProfiles(updatedProfiles);
     setSelectedProfile(newProfile);
     setCurrentPage('dashboard');
+    
+    // Force storage save immediately
+    storage.set('profiles', updatedProfiles);
+    console.log('Profile saved to storage');
   };
 
   const handleSelectProfile = (profile: ChildProfile) => {
+    console.log('Selecting profile:', profile);
     setSelectedProfile(profile);
     setCurrentPage('dashboard');
   };
@@ -181,6 +198,14 @@ const Index = () => {
             )}
           </div>
         </header>
+
+        {/* Debug Info */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+            <p className="text-sm">Debug: {profiles.length} perfis carregados</p>
+            <p className="text-sm">Perfil selecionado: {selectedProfile?.name || 'Nenhum'}</p>
+          </div>
+        )}
 
         {/* Main Content */}
         <main>

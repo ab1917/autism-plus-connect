@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from '@/components/ui/form';
 import { X } from 'lucide-react';
 import { ChildProfile } from '@/lib/types';
 
@@ -71,11 +70,40 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
     preference: ''
   });
 
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+    }
+    
+    if (!formData.age || parseInt(formData.age) < 1 || parseInt(formData.age) > 18) {
+      newErrors.age = 'Idade deve ser entre 1 e 18 anos';
+    }
+    
+    if (!formData.dateOfBirth) {
+      newErrors.dateOfBirth = 'Data de nascimento é obrigatória';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started');
+    console.log('Form data:', formData);
+    
+    if (!validateForm()) {
+      console.log('Validation failed:', errors);
+      return;
+    }
+    
     const profileData = {
-      name: formData.name,
+      name: formData.name.trim(),
       age: parseInt(formData.age),
       dateOfBirth: formData.dateOfBirth,
       diagnoses: formData.diagnoses,
@@ -83,11 +111,13 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
       preferences: formData.preferences
     };
 
+    console.log('Submitting profile data:', profileData);
     onSubmit(profileData);
   };
 
   const addItem = (category: 'diagnoses' | 'sensitivities' | 'preferences', item: string) => {
     if (item && !formData[category].includes(item)) {
+      console.log(`Adding ${item} to ${category}`);
       setFormData(prev => ({
         ...prev,
         [category]: [...prev[category], item]
@@ -96,6 +126,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
   };
 
   const removeItem = (category: 'diagnoses' | 'sensitivities' | 'preferences', item: string) => {
+    console.log(`Removing ${item} from ${category}`);
     setFormData(prev => ({
       ...prev,
       [category]: prev[category].filter(i => i !== item)
@@ -123,8 +154,9 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="Digite o nome"
-          required
+          className={errors.name ? 'border-red-500' : ''}
         />
+        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -139,8 +171,9 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
             placeholder="Idade em anos"
             min="1"
             max="18"
-            required
+            className={errors.age ? 'border-red-500' : ''}
           />
+          {errors.age && <p className="text-red-500 text-sm mt-1">{errors.age}</p>}
         </div>
 
         <div>
@@ -151,8 +184,9 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
             type="date"
             value={formData.dateOfBirth}
             onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-            required
+            className={errors.dateOfBirth ? 'border-red-500' : ''}
           />
+          {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
         </div>
       </div>
 
@@ -165,7 +199,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
             <SelectTrigger>
               <SelectValue placeholder="Selecione um diagnóstico comum" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
               {commonDiagnoses.map((diagnosis) => (
                 <SelectItem key={diagnosis} value={diagnosis}>
                   {diagnosis}
@@ -209,7 +243,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma sensibilidade comum" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
               {commonSensitivities.map((sensitivity) => (
                 <SelectItem key={sensitivity} value={sensitivity}>
                   {sensitivity}
@@ -253,7 +287,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma preferência comum" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
               {commonPreferences.map((preference) => (
                 <SelectItem key={preference} value={preference}>
                   {preference}
