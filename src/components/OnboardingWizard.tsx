@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,6 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   });
 
   const progress = ((currentStep + 1) / steps.length) * 100;
-  const CurrentStepComponent = steps[currentStep].component;
 
   const handleStepData = (stepData: Partial<ChildProfile>) => {
     setProfileData(prev => ({ ...prev, ...stepData }));
@@ -81,34 +81,61 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   };
 
   const renderCurrentStep = () => {
-    if (currentStep === 0) {
-      // WelcomeStep props
-      return (
-        <CurrentStepComponent
-          onNext={handleNext}
-          isFirstStep={true}
-        />
-      );
-    } else if (currentStep === steps.length - 1) {
-      // FinalStep props
-      return (
-        <CurrentStepComponent
-          data={profileData}
-          onPrevious={handlePrevious}
-          onComplete={handleComplete}
-        />
-      );
-    } else {
-      // Other steps props
-      return (
-        <CurrentStepComponent
-          data={profileData}
-          onDataChange={handleStepData}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-          isFirstStep={currentStep === 0}
-        />
-      );
+    switch (currentStep) {
+      case 0:
+        return (
+          <WelcomeStep
+            onNext={handleNext}
+            isFirstStep={true}
+          />
+        );
+      case 1:
+        return (
+          <ChildInfoStep
+            data={profileData}
+            onDataChange={handleStepData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            isFirstStep={false}
+          />
+        );
+      case 2:
+        return (
+          <DiagnosisStep
+            data={profileData}
+            onDataChange={handleStepData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 3:
+        return (
+          <SensoryProfileStep
+            data={profileData}
+            onDataChange={handleStepData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 4:
+        return (
+          <CommunicationStep
+            data={profileData}
+            onDataChange={handleStepData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 5:
+        return (
+          <FinalStep
+            data={profileData}
+            onPrevious={handlePrevious}
+            onComplete={handleComplete}
+          />
+        );
+      default:
+        return null;
     }
   };
 
