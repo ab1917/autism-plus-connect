@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, User, Calendar, Heart, Brain } from 'lucide-react';
 import { ChildProfile } from '@/lib/types';
-import { ProfileForm } from './ProfileForm';
+import { OnboardingWizard } from './OnboardingWizard';
 
 interface ProfileSelectorProps {
   profiles: ChildProfile[];
@@ -113,13 +113,9 @@ export function ProfileSelector({
             </Card>
           </DialogTrigger>
 
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Criar Novo Perfil</DialogTitle>
-            </DialogHeader>
-            
-            <ProfileForm 
-              onSubmit={handleCreateProfile}
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden p-0">
+            <OnboardingWizard 
+              onComplete={handleCreateProfile}
               onCancel={() => setIsCreateDialogOpen(false)}
             />
           </DialogContent>
