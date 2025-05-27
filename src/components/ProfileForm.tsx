@@ -57,6 +57,7 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     age: '',
+    gender: 'nao_informado' as 'masculino' | 'feminino' | 'outro' | 'nao_informado',
     dateOfBirth: '',
     diagnoses: [] as string[],
     sensitivities: [] as string[],
@@ -103,13 +104,25 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
       return;
     }
     
-    const profileData = {
+    const profileData: Omit<ChildProfile, 'id' | 'createdAt' | 'updatedAt'> = {
       name: formData.name.trim(),
       age: parseInt(formData.age),
+      gender: formData.gender,
       dateOfBirth: formData.dateOfBirth,
       diagnoses: formData.diagnoses,
       sensitivities: formData.sensitivities,
-      preferences: formData.preferences
+      preferences: formData.preferences,
+      sensoryProfile: {
+        auditory: { loudNoises: 'media', specificSounds: [], backgroundNoise: 'media' },
+        visual: { brightLights: 'media', flashingLights: 'media', visualPatterns: 'media' },
+        tactile: { clothingTextures: 'media', lightTouch: 'media', foodTextures: 'media' },
+        vestibular: { movement: 'media', heights: 'media', spinning: 'media' }
+      },
+      communicationLevel: {
+        verbalLevel: 'palavras_simples',
+        preferredMethods: [],
+        strategies: []
+      }
     };
 
     console.log('✅ Validation passed. Submitting profile data:', profileData);
@@ -210,6 +223,29 @@ export function ProfileForm({ onSubmit, onCancel }: ProfileFormProps) {
           />
           {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Gênero *
+        </label>
+        <Select 
+          value={formData.gender} 
+          onValueChange={(value: 'masculino' | 'feminino' | 'outro' | 'nao_informado') => {
+            console.log('Gender changed to:', value);
+            setFormData({ ...formData, gender: value });
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o gênero" />
+          </SelectTrigger>
+          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+            <SelectItem value="masculino">Masculino</SelectItem>
+            <SelectItem value="feminino">Feminino</SelectItem>
+            <SelectItem value="outro">Outro</SelectItem>
+            <SelectItem value="nao_informado">Prefiro não informar</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,6 +80,38 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
     onComplete(completeProfile);
   };
 
+  const renderCurrentStep = () => {
+    if (currentStep === 0) {
+      // WelcomeStep props
+      return (
+        <CurrentStepComponent
+          onNext={handleNext}
+          isFirstStep={true}
+        />
+      );
+    } else if (currentStep === steps.length - 1) {
+      // FinalStep props
+      return (
+        <CurrentStepComponent
+          data={profileData}
+          onPrevious={handlePrevious}
+          onComplete={handleComplete}
+        />
+      );
+    } else {
+      // Other steps props
+      return (
+        <CurrentStepComponent
+          data={profileData}
+          onDataChange={handleStepData}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          isFirstStep={currentStep === 0}
+        />
+      );
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Card>
@@ -103,15 +134,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         </CardHeader>
 
         <CardContent>
-          <CurrentStepComponent
-            data={profileData}
-            onDataChange={handleStepData}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            onComplete={handleComplete}
-            isFirstStep={currentStep === 0}
-            isLastStep={currentStep === steps.length - 1}
-          />
+          {renderCurrentStep()}
         </CardContent>
       </Card>
     </div>
